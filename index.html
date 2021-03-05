@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title> makin of the ping pong ball </title>
+<meta charset="utf-8">
+</head>
+<body>
+
+	<canvas    id="pong"  width="600px" height="400px">   </canvas>
+
+
+ <script  src="bootstrap/jQuery.js"></script>
+  <script  src="bootstrap/js/bootstrap.min.js"></script>
+
+<script>
+
+
+
+	/// selected canvas // 
+	 const cvs = document.getElementById("pong");
+	 const ctx = cvs.getContext("2d");
+ 
+ // draw function 
+   function drawRectangle(x,y,w,h,color)  {
+       ctx.fillStyle =color;
+       ctx.fillRect(x,y,w,h);
+   }
+ 
+
+
+                 
+
+
+
+
+
+ ////         creation of the user paddle 
+
+                    const user ={
+                              x:0,
+                              y:cvs.height/2-100/2,
+                              width:10,
+                              height:100,
+                              color:"white",
+                              score:0,
+                    }	
+                  
+                  // cration of the comp paddle 
+
+                    const comp = {
+                               x :cvs.width-10,
+                               y :cvs.height/2-100/2,
+                               width:10,
+                               height:100,
+                               color:"white",
+                               score:0,
+                           }
+
+
+                           //               create  the ball //
+
+                 const ball = {
+                       x:cvs.width/2,
+                       y:cvs.height/2,
+                       radius:10,
+                       speed:5,
+                       velocityX:5,
+                       velocityY:5,
+                       color:"white",
+                 }
+
+
+
+        // controll the user paddle /////
+                     cvs.addEventListener("mousemove",movePaddle);
+
+                     function  movePaddle(evt)  {
+                      	let rect = cvs.getBoundingClientRect();
+
+                      	 user.y = evt.clientY - rect.top - user.height/2;
+
+                      }
+
+
+ //       draw text      
+
+function drawText(text,x,y,color)  {
+	 ctx.fillStyle=color;
+	 ctx.font="45px fantasy";
+	 ctx.fillText(text,x,y)
+}
+  drawText("hi there",300,200,"white");
+  
+  //// create the net //
+
+          const net = {
+                  x:cvs.width/2-1,
+                  y:0,
+                  width:2,
+                  height:10,
+                  color:"white",
+          }
+
+///            draw the net function 
+
+          function drawNet(){
+
+          	for (let i =  0; i<= cvs.height ; i+=15)  {
+
+                  drawRectangle(net.x, net.y + i , net.width , net.height , net.color);
+          	}
+          }
+  //// draw circle 
+   function drawCircle(x,y,r,color)   {
+                 ctx.fillStyle=color;
+                 ctx.beginPath();
+                 ctx.arc(x,y,r,0,Math.PI*2,false);
+                 ctx.closePath();
+                 ctx.fill();
+        }
+                drawCircle(100,100,50,"white");
+
+
+                function render()  {
+                	                // clear the canvas 
+                	drawRectangle(0,0, cvs.width, cvs.height,"black");
+                                     // draw the net 
+                	drawNet();
+
+                          // draw score  //  
+                	drawText(user.score,cvs.width/4,cvs.height/5,"white");
+                	drawText(comp.score,3*cvs.width/4,cvs.height/5,"white");
+
+             	//////   draW THE USER AND  THE COMp Paddle ./'//
+                                   
+               drawRectangle(user.x ,  user.y,  user.width, user.height , user.color);
+               drawRectangle(comp.x ,  comp.y,  comp.width, comp.height , comp.color);
+
+               /////// draw The ball /////
+
+               drawCircle(ball.x,ball.y,ball.radius,ball.color);
+
+}
+
+                                    // reset balll
+                                    function resetBall()   {
+
+                                         ball.x = cvs.width/2;
+                                         ball.y = cvs.height/2;
+
+
+                                         ball.speed = 5;
+                                         ball.velocityX = -ball.velocityX;
+                                     }
+
+
+                                   
+                
+//////////////////   collision detection ////////
+
+
+                 function collision(b,p) {
+
+                         b.top = b.y - b.radius;
+                         b.bottom = b.y + b.radius;
+                         b.left = b.x -b.radius;
+                         b.right= b.x + b.radius;
+
+                         p.top = p.y;
+                         p.bottom =  p.y + p.height;
+                         p.left = p.x;
+                         p.right = p.x + p.width;
+
+                         return b.right > p.left && b.bottom > p.top && b.left < p.right && b.top < p.bottom;  
+ }
+
+                ///// update // pos /// move /// score .///  
+                    function update(){
+
+                        ball.x   += ball.velocityX;
+                        ball.y   += ball.velocityY;
+
+
+                             //// simple AI to controll the com paddle //
+
+                        let computerLevel = 0.1;
+
+                     comp.y += (ball.y - (comp.y  + comp.height/2 )) * computerLevel;
+
+
+                          if(ball.y + ball.radius > cvs.height || ball.y - ball.radius < 0)  {
+                    	ball.velocityY = -ball.velocityY;
+                    } 
+
+                let player = (ball.x < cvs.width/2 )? user : comp;
+
+                     if(collision(ball,player))  {
+
+                     	///See where the ball  hit the player ///
+
+                   let collidepoint= ball.y -(player.y  + player.height/2);
+
+
+                      //// normalizatnion   
+
+                       collidepoint = collidepoint/(player.height/2);
+
+
+
+                                 //// Calculate the angel of the radian.....///
+                       let angleRed = collidepoint * Math.PI/4;
+
+
+
+                        ///  x direction of the ball every time it hits.
+                           let direction = (ball.x < cvs.width/2)? 1 : -1;
+
+
+                      /// CHANGE THE VILOCITY OF THE X AND Y //
+                       ball.velocityX= direction* ball.speed * Math.cos(angleRed);
+                       ball.velocityY=            ball.speed * Math.sin(angleRed);
+
+                         //everytime the ball hit's the paddle we increse it's speed //
+                         ball.speed += 0.1 ;
+
+                       }
+                       //updat the score //
+                            if(ball.x - ball.radius<0) {
+
+                            	// the comp win
+
+                            	comp.score++;
+                            	resetBall();
+                            }else if (ball.x + ball.radius > cvs.width) {
+
+                                   // the user winnn
+                               user.score++ ;
+                               resetBall();
+                                 }
+}
+                // game init //                 
+                 function game() {
+
+                     update();
+                 	 render();
+                 }
+                      ////loop /////
+                  const framesPerSecond=50;
+            setInterval(game,1000/framesPerSecond); 
+
+
+
+
+
+
+   </script>
+ 
+ </body>
+	
+</html>
